@@ -425,7 +425,7 @@ describe("Hey Elsa & The AI Council — Smart Contract Suite", function () {
         const scoreBefore = await reputation.getScore(agentId);
         await expect(reputation.connect(admin).recordSuccess(agentId, 3_000n))
           .to.emit(reputation, "ScoreUpdated")
-          .withArgs(agentId, /* any */ agentId, /* wasSuccess */ true);
+          .withArgs(agentId, 600n, /* wasSuccess */ true);
 
         const scoreAfter = await reputation.getScore(agentId);
         expect(scoreAfter).to.be.gt(scoreBefore);
@@ -462,8 +462,7 @@ describe("Hey Elsa & The AI Council — Smart Contract Suite", function () {
       it("decreases score after a failure", async function () {
         const scoreBefore = await reputation.getScore(agentId);
         await expect(reputation.connect(admin).recordFailure(agentId))
-          .to.emit(reputation, "ScoreUpdated")
-          .withArgs(agentId, /* any */ agentId, /* wasSuccess */ false);
+          .to.emit(reputation, "ScoreUpdated");
 
         const scoreAfter = await reputation.getScore(agentId);
         expect(scoreAfter).to.be.lt(scoreBefore);
@@ -1772,7 +1771,7 @@ describe("Hey Elsa & The AI Council — Smart Contract Suite", function () {
         );
         const agentOwner =
           (await registry.getAgent(task.selectedAgentId)).owner ===
-          providerA.address
+            providerA.address
             ? providerA
             : providerB;
 

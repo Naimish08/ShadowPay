@@ -270,7 +270,10 @@ contract AgentMarketplace is IAgentMarketplace, AccessControl, ReentrancyGuard {
         uint256 avgSpeedMs
     ) external returns (uint256 agentId) {
         // Step 1 — register in the registry (caller becomes the owner)
-        agentId = registry.registerAgent(
+        // Use registerAgentFor so that msg.sender (the developer wallet)
+        // is recorded as the owner, not this marketplace contract address.
+        agentId = registry.registerAgentFor(
+            msg.sender,
             name,
             agentType,
             category,
@@ -501,8 +504,11 @@ contract AgentMarketplace is IAgentMarketplace, AccessControl, ReentrancyGuard {
 
         bool isAgentOwner = (msg.sender == agent.owner);
         bool isAdmin = hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        // Allow the oracle to fail WEB2 tasks (mirrors completeTask logic)
+        bool isOracle = (task.category == DataTypes.AgentCategory.WEB2 &&
+                         hasRole(ORACLE_ROLE, msg.sender));
 
-        if (!isAgentOwner && !isAdmin)
+        if (!isAgentOwner && !isAdmin && !isOracle)
             revert NotAssignedAgentOwner(taskId, msg.sender);
 
         // --- Effects ---
