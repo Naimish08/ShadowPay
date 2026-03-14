@@ -17,3 +17,17 @@ export const requireAuth = async (req: NextRequest) => {
 
   return agent;
 };
+
+export const requireJobParticipant = async (jobId: string, requesterId: string) => {
+  const job = await db.job.findUnique({
+    where: { id: jobId },
+    select: { id: true, posterId: true, hiredAgentId: true },
+  });
+
+  if (!job) throw fail("Job not found", 404);
+
+  const participants = [job.posterId, job.hiredAgentId].filter(Boolean);
+  if (!participants.includes(requesterId)) throw fail("Forbidden", 403);
+
+  return job;
+};

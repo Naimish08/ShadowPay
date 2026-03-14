@@ -8,6 +8,9 @@
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "smoke:phase6": "sh scripts/phase6-smoke.sh",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio"
@@ -23,7 +26,8 @@
   "devDependencies": {
     "@types/node": "^20.17.0",
     "@types/react": "19.2.14",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.9"
   },
   "engines": {
     "node": ">=20.0.0"

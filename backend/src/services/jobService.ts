@@ -12,13 +12,19 @@ const TRANSITIONS: Record<JobStatus, JobStatus[]> = {
   disputed: [],
 };
 
-export const createJob = async (posterId: string, input: {
-  title: string;
-  description?: string | null;
-  budgetMin?: string | number | null;
-  budgetMax?: string | number | null;
-  parentJobId?: string | null;
-}) => {
+export const createJob = async (
+  posterId: string,
+  input: {
+    title: string;
+    description?: string | null;
+    budgetMin?: string | number | null;
+    budgetMax?: string | number | null;
+    parentJobId?: string | null;
+    blueprintId?: string | null;
+    blueprintRef?: string | null;
+    blueprintHash?: string | null;
+  },
+) => {
   if (!input.title?.trim()) throw fail("title is required", 400);
 
   const job = await db.job.create({
@@ -29,6 +35,14 @@ export const createJob = async (posterId: string, input: {
       budgetMin: input.budgetMin == null ? null : String(input.budgetMin),
       budgetMax: input.budgetMax == null ? null : String(input.budgetMax),
       parentJobId: input.parentJobId ?? null,
+      ...(input.blueprintId || input.blueprintRef || input.blueprintHash
+        ? ({
+            blueprintId: input.blueprintId ?? null,
+            blueprintRef: input.blueprintRef ?? null,
+            blueprintHash: input.blueprintHash ?? null,
+            blueprintAttachedAt: new Date(),
+          } as Record<string, unknown>)
+        : {}),
     },
   });
 
@@ -40,12 +54,14 @@ export const listJobs = async (filters: {
   status?: JobStatus | null;
   posterId?: string | null;
   hiredAgentId?: string | null;
+  blueprintId?: string | null;
 }) => {
   return db.job.findMany({
     where: {
       ...(filters.status ? { status: filters.status } : {}),
       ...(filters.posterId ? { posterId: filters.posterId } : {}),
       ...(filters.hiredAgentId ? { hiredAgentId: filters.hiredAgentId } : {}),
+      ...(filters.blueprintId ? { blueprintId: filters.blueprintId } : {}),
     },
     orderBy: { createdAt: "desc" },
   });
@@ -73,7 +89,11 @@ export const transitionStatus = async (jobId: string, newStatus: JobStatus) => {
   return updated;
 };
 
-export const deliverJob = async (jobId: string, agentId: string, deliverable: string) => {
+export const deliverJob = async (
+  jobId: string,
+  agentId: string,
+  deliverable: string,
+) => {
   const job = await getJob(jobId);
   if (job.hiredAgentId !== agentId) throw fail("Not your job", 403);
   if (job.status !== "in_progress") throw fail("Job is not in progress", 400);
@@ -91,16 +111,65 @@ export const completeJob = async (jobId: string, posterId: string) => {
   if (job.status !== "delivered") throw fail("Job is not delivered", 400);
 
   const updated = await transitionStatus(jobId, "completed");
-  broadcast("job.completed", { jobId, posterId, hiredAgentId: job.hiredAgentId });
+  broadcast("job.completed", {
+    jobId,
+    posterId,
+    hiredAgentId: job.hiredAgentId,
+  });
   return updated;
 };
 
 export const disputeJob = async (jobId: string, posterId: string) => {
   const job = await getJob(jobId);
   if (job.posterId !== posterId) throw fail("Not your job", 403);
-  if (job.status !== "delivered") throw fail("Only delivered jobs can be disputed", 400);
+  if (job.status !== "delivered")
+    throw fail("Only delivered jobs can be disputed", 400);
 
   const updated = await transitionStatus(jobId, "disputed");
-  broadcast("job.disputed", { jobId, posterId, hiredAgentId: job.hiredAgentId });
+  broadcast("job.disputed", {
+    jobId,
+    posterId,
+    hiredAgentId: job.hiredAgentId,
+  });
+  return updated;
+};
+
+export const attachBlueprintToJob = async (
+  jobId: string,
+  posterId: string,
+  input: {
+    blueprintId: string;
+    blueprintRef: string;
+    blueprintHash: string;
+  },
+) => {
+  if (!input.blueprintId?.trim()) throw fail("blueprintId is required", 400);
+  if (!input.blueprintRef?.trim()) throw fail("blueprintRef is required", 400);
+  if (!input.blueprintHash?.trim())
+    throw fail("blueprintHash is required", 400);
+
+  const job = await getJob(jobId);
+  if (job.posterId !== posterId) throw fail("Not your job", 403);
+
+  const updated = await db.job.update({
+    where: { id: jobId },
+    data: {
+      ...({
+        blueprintId: input.blueprintId,
+        blueprintRef: input.blueprintRef,
+        blueprintHash: input.blueprintHash,
+        blueprintAttachedAt: new Date(),
+      } as Record<string, unknown>),
+    },
+  });
+
+  broadcast("job.blueprint.attached", {
+    jobId,
+    posterId,
+    blueprintId: input.blueprintId,
+    blueprintRef: input.blueprintRef,
+    blueprintHash: input.blueprintHash,
+  });
+
   return updated;
 };
