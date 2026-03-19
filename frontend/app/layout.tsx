@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/Sidebar";
 import { CyberParticles } from "@/components/CyberParticles";
+import { SessionBanner } from "@/components/SessionBanner";
 import { HeyElsaChatWidget } from "@heyelsa/chat-widget";
 
 const geistSans = Geist({
@@ -34,6 +35,7 @@ export default function RootLayout({
           <Sidebar />
           <div className="flex-1 lg:ml-64 ml-16 w-full relative">
             <CyberParticles />
+            <SessionBanner />
             {children}
             <HeyElsaChatWidget keyId="local-elsa" dappName="Hey Elsa" />
           </div>

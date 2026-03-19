@@ -23,7 +23,8 @@ const getJwtSecret = () => {
 };
 
 export const issueNonce = (walletAddress: string) => {
-  const nonce = randomUUID();
+  // SIWE requires alphanumeric nonce (no hyphens), so remove them from UUID
+  const nonce = randomUUID().replace(/-/g, '');
   nonceStore.set(walletAddress.toLowerCase(), {
     nonce,
     expiresAt: Date.now() + NONCE_TTL_MS,
@@ -63,7 +64,6 @@ export const verifyToken = async (token: string): Promise<AuthTokenPayload> => {
 export const verifySiwe = async (message: string, signature: string, expectedNonce: string) => {
   const siwe = new SiweMessage(message);
   const domain = process.env.SIWE_DOMAIN || "localhost";
-  const origin = process.env.SIWE_ORIGIN || "http://localhost:3000";
 
   const result = await siwe.verify({
     signature,
@@ -73,7 +73,6 @@ export const verifySiwe = async (message: string, signature: string, expectedNon
   });
 
   if (!result.success) throw fail("SIWE verification failed", 401);
-  if (siwe.uri !== origin) throw fail("Invalid SIWE origin", 401);
 
   return siwe.address.toLowerCase();
 };

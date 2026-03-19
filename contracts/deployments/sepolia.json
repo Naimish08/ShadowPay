@@ -1,0 +1,18 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "deployedAt": "2026-03-19T05:55:35.997Z",
+  "deployer": "0x8D523b4155317f41da9d3c23f486A8A33334a5C9",
+  "contracts": {
+    "AgentRegistry": "0x108a27232Cb89A80B3030115778f6f0488Ea6566",
+    "ReputationEngine": "0xDbAD596d0D375f23faa5515F110b43FcAc6B23F5",
+    "TaskEscrow": "0x0ae59dA6B10908caF1d14C31C393800fE5086A97",
+    "AgentMarketplace": "0xF72C24F0E2f90f71fd83841d460dBb0d0b097e9d",
+    "Web2Oracle": "0x9Ef20E2aa4937090047A510a2E8Ce0DFaD8376ca",
+    "ElsaOrchestrator": "0xe4c9A74CbCd0122c70a3f30072DfE2F19dC42817"
+  },
+  "roles": {
+    "elsaSigner": "0x8D523b4155317f41da9d3c23f486A8A33334a5C9",
+    "oracleOperator": "0x8D523b4155317f41da9d3c23f486A8A33334a5C9"
+  }
+}

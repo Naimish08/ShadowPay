@@ -82,6 +82,37 @@ Main endpoints:
 Main endpoint:
 - `GET /api/jobs/:id/blueprint`
 
+### 6) HeyElsa Orchestration + Execution Bootstrap (Phase 7 complete)
+
+- Planning endpoint now returns a deterministic orchestration contract aligned to Elsa rules:
+  - council-of-four metadata
+  - disagreement requirement
+  - quote-before-signing requirement
+  - ranking formula and execution pipeline
+  - evidence bundle template
+- Authenticated execution endpoint bootstraps real backend state:
+  - creates Fileverse-backed blueprint from prompt
+  - creates job linked to blueprint reference/hash
+  - optionally posts blueprint execution to Sepolia ElsaOrchestrator
+  - returns blueprint metadata, job metadata, and evidence bundle draft
+- Quote acceptance is mandatory before execution bootstrap.
+
+Main endpoints:
+- `POST /api/heyElsa`
+- `POST /api/heyElsa/execute`
+- `POST /api/heyElsa/x402/sign`
+- `POST /api/heyElsa/x402/dispatch`
+- `POST /api/heyElsa/oracle/verify`
+
+Optional on-chain flags (for `POST /api/heyElsa/execute`):
+- `HEYELSA_ONCHAIN_ENABLED=true`
+- `SEPOLIA_RPC_URL`
+- `ELSA_SIGNER_PRIVATE_KEY`
+- `ELSA_ORCHESTRATOR_ADDRESS`
+- `ELSA_ONCHAIN_MIN_CONFIRMATIONS`
+- `ELSA_X402_DISPATCH_TIMEOUT_MS`
+- `ELSA_ORACLE_WEBHOOK_SECRET`
+
 ## Quick Run
 
 ### 1) Install
@@ -117,5 +148,6 @@ Copy `backend/.env.example` to `backend/.env` and fill:
 ## Notes
 
 - Smart contract integrations are intentionally not part of this backend scope yet.
-- HeyElsa orchestration logic is intentionally kept separate from this implementation pass.
+- HeyElsa endpoint now includes planning, backend bootstrap, x402 challenge handling,
+  oracle callback-driven settlement gating, and optional on-chain reputation mutation.
 - Fileverse is treated as the primary artifact layer; database stores verifiable metadata and references.
